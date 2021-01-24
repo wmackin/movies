@@ -1,11 +1,18 @@
+"""
+Sign in as user and manage your personal movie list. You can add movies to your watched list, and view the list.
+
+@author: wmackin
+"""
+
 import imdb
 
-user = input("Enter a username: ")
-
-moviesDB = imdb.IMDb()
-
-
-def add():
+def add(user, moviesDB):
+    """
+    Add a movie to watched list
+    :param user: user adding movie
+    :param moviesDB: movie database
+    :return: None
+    """
     movies = moviesDB.search_movie(input("Enter a movie: "))
 
     print('Searching...')
@@ -32,7 +39,13 @@ def add():
     else:
         print("Cancelled adding " + title + "to your watch list")
 
-def watched():
+def watched(user, moviesDB):
+    """
+    Prints watched list of user
+    :param user: user adding movie
+    :param moviesDB: movie database
+    :return: None
+    """
     print("Here is every movie you have seen:")
     file = open(user + '.txt', 'r')
     for line in file:
@@ -41,16 +54,27 @@ def watched():
         print(title)
     file.close()
 
-while True:
-    command = input("Enter a command or 'help' for help: ")
-    if (command.lower() == 'a') or (command.lower() == 'add'):
-        add()
-    if (command.lower() == 'h') or (command.lower() == 'help'):
-        print("'add' or 'a': Add movie to watched list")
-        print("'help' or 'h': Open help menu")
-        print("'list' or 'l': Print watched list")
-        print("'quit' or q: Quit program")
-    if (command.lower() == 'l') or (command.lower() == 'list'):
-        watched()
-    if (command.lower() == 'q') or (command.lower() == 'quit'):
-        break
+def main():
+    """
+    Continually loops commands after a username is entered until exit command is entered.
+    :return:
+    """
+    user = input("Enter a username: ")
+
+    moviesDB = imdb.IMDb()
+    while True:
+        command = input("Enter a command or 'help' for help: ")
+        if (command.lower() == 'a') or (command.lower() == 'add'):
+            add(user, moviesDB)
+        if (command.lower() == 'h') or (command.lower() == 'help'):
+            print("'add' or 'a': Add movie to watched list")
+            print("'help' or 'h': Open help menu")
+            print("'list' or 'l': Print watched list")
+            print("'quit' or q: Quit program")
+        if (command.lower() == 'l') or (command.lower() == 'list'):
+            watched(user, moviesDB)
+        if (command.lower() == 'q') or (command.lower() == 'quit'):
+            break
+
+if __name__ == '__main__':
+    main()
