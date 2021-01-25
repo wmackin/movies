@@ -5,12 +5,15 @@ Sign in as user and manage your personal movie list. You can add movies to your 
 """
 
 import imdb
+import mysql.connector
 
-def add(user, moviesDB):
+def add(user, moviesDB, cur, cn):
     """
     Add a movie to watched list
     :param user: user adding movie
     :param moviesDB: movie database
+    :param cur: mySQL cur
+    :param cn: database connection
     :return: None
     """
     movies = moviesDB.search_movie(input("Enter a movie: "))
@@ -32,49 +35,64 @@ def add(user, moviesDB):
     print("Type '1' to confirm")
     confirmation = input()
     if confirmation == '1':
-        file = open(user + '.txt', 'a')
-        file.write(movie_id + '\n')
+        cur.execute("INSERT INTO watch_lists VALUES (%s, %s, %s);", (user, movie_id, title))
+        cn.commit()
         print(title + " has been added to your watched list")
-        file.close()
     else:
         print("Cancelled adding " + title + "to your watch list")
 
-def watched(user, moviesDB):
+def watched(user, moviesDB, cur, cn):
     """
     Prints watched list of user
     :param user: user adding movie
     :param moviesDB: movie database
+    :param cur: mySQL cur
+    :param cn: database connection
     :return: None
     """
     print("Here is every movie you have seen:")
-    file = open(user + '.txt', 'r')
-    for line in file:
-        movie = moviesDB.get_movie(line)
-        title = movie['title']
-        print(title)
-    file.close()
+    cur.execute("SELECT title FROM watch_lists WHERE user = %s;", (user,))
+    titles = cur.fetchall()
+    print(titles)
+    for movie in titles:
+        print(movie[0])
 
 def main():
     """
     Continually loops commands after a username is entered until exit command is entered.
     :return:
     """
+
+    config = {
+        'user': 'root',
+        'password': 'password',
+        'host': 'localhost',
+        'database': 'movies',
+        'port': 3306,
+        'raise_on_warnings': True
+    }
+    cn = mysql.connector.connect(**config)
+    cur = cn.cursor()
+
     user = input("Enter a username: ")
 
     moviesDB = imdb.IMDb()
     while True:
         command = input("Enter a command or 'help' for help: ")
         if (command.lower() == 'a') or (command.lower() == 'add'):
-            add(user, moviesDB)
+            add(user, moviesDB, cur, cn)
         if (command.lower() == 'h') or (command.lower() == 'help'):
             print("'add' or 'a': Add movie to watched list")
             print("'help' or 'h': Open help menu")
             print("'list' or 'l': Print watched list")
             print("'quit' or q: Quit program")
         if (command.lower() == 'l') or (command.lower() == 'list'):
-            watched(user, moviesDB)
+            watched(user, moviesDB, cur, cn)
         if (command.lower() == 'q') or (command.lower() == 'quit'):
             break
+
+    cur.close()
+    cn.close()
 
 if __name__ == '__main__':
     main()
