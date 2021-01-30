@@ -31,30 +31,46 @@ def add(user, moviesDB, cur, cn):
 
     print('Searching...')
 
-    movie_id = movies[0].getID()
-    movie = moviesDB.get_movie(movie_id)
-    title = movie['title']
-    try:
-        year = movie['year']
-    except KeyError:
-        year = 0
-    try:
-        directors = movie['directors']
-    except KeyError:
-        directors = ''
+    print('Top results info: ')
+    movie_ids = []
+    titles = []
+    years = []
 
-    print('Top result info: ')
-    print(f'{title} - {year}')
-    directStr = ' '.join(map(str, directors))
-    print(f'directors: {directStr}')
-    print("Type '1' to confirm")
+    for i in range (0,3):
+        try:
+            movie_ids.append(movies[i].getID())
+        except IndexError:
+            print("No movies found.")
+            break
+        movie = moviesDB.get_movie(movie_ids[i])
+        titles.append(movie['title'])
+        try:
+            years.append(movie['year'])
+        except KeyError:
+            year = 0
+        try:
+            directors = movie['directors']
+        except KeyError:
+            directors = ''
+
+        print(str(i + 1) + ". ", end="")
+        print(f'{titles[i]} - {years[i]}')
+        directStr = ' '.join(map(str, directors))
+        print(f'directors: {directStr}')
+    print("Type '1', '2', or '3' to confirm a search result, or anything else to cancel. ")
     confirmation = input()
-    if confirmation == '1':
-        cur.execute("INSERT INTO watch_lists VALUES (%s, %s, %s, %s);", (user, movie_id, title, year))
+    if confirmation == '1' or confirmation == '2' or confirmation == '3':
+        cur.execute("SELECT * FROM watch_lists WHERE movie_id = %s AND user = %s;", (movie_ids[int(confirmation)-1], user))
+        duplicates = cur.fetchall()
+        if len(duplicates) > 0:
+            print("Movie already in watched list.")
+            return
+        cur.execute("INSERT INTO watch_lists VALUES (%s, %s, %s, %s);", (user, movie_ids[int(confirmation)-1],
+                                                                         titles[int(confirmation)-1], years[int(confirmation)-1]))
         cn.commit()
-        print(title + " has been added to your watched list")
+        print(titles[int(confirmation)-1] + " has been added to your watched list")
     else:
-        print("Cancelled adding " + title + " to your watch list")
+        print("Cancelled adding " + titles[0] + " to your watch list")
 
 def watched(user, cur):
     """
@@ -122,9 +138,10 @@ def rank(user, cur, cn):
     print("Choice", user_pick, "is the winner!")
     cn.commit()
 
-def ranked_list(user, cur):
+def ranked_list(top, user, cur):
     """
     Prints the ranked list of movies user has watched
+    :param top: number of top movies to print
     :param user: user's list to print
     :param cur: database cursor
     :return: none
@@ -151,10 +168,14 @@ def ranked_list(user, cur):
         except ZeroDivisionError:
             movie_rankings[movie[0]] = 0
     movie_list = sorted(movie_rankings.keys(), reverse=True, key=movie_rankings.get)
+    i = 1
     for movie in movie_list:
+        if i > top:
+            break
         cur.execute("SELECT title FROM watch_lists WHERE movie_id = %s;", (movie,))
         title = cur.fetchall()[0][0]
-        print(title)
+        print(str(i) + ". " + title)
+        i += 1
 
 
 def main():
@@ -195,7 +216,8 @@ def main():
         if (command.lower() == 'r') or (command.lower() == 'rank'):
             rank(user, cur, cn)
         if (command.lower() == 't') or (command.lower() == 'top'):
-            ranked_list(user, cur)
+            top = int(input("How many movies do you want to show? "))
+            ranked_list(top, user, cur)
 
     cur.close()
     cn.close()
