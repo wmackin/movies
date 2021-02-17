@@ -128,9 +128,10 @@ def rank(user, cur, cn):
             break
     user_pick = 0
     while not (user_pick == 1 or user_pick == 2):
-        user_pick = int(input(title1 + " (" + str(year1) + ") '1' vs " + title2 +
-                      " (" + str(year2) + ") '2'. Type '1' or '2' for your favorite. "))
-        print(user_pick)
+        user_pick = input(title1 + " (" + str(year1) + ") '1' vs " + title2 +
+                      " (" + str(year2) + ") '2'. Type '1' or '2' for your favorite. ")
+        if user_pick.isdigit():
+            user_pick = int(user_pick)
     if user_pick == 1:
         cur.execute("INSERT INTO rankings VALUES (%s, %s, %s);", (user, movie1, movie2))
     else:
