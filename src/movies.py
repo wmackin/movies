@@ -142,6 +142,12 @@ def rank(user, cur, cn):
 def ranked_list(top, user, cur):
     """
     Prints the ranked list of movies user has watched
+    The formula works as follows:
+    1. Rank movies by win count in one list
+    2. Rank movies by win% in one list
+    Rank movies by sum of their position on 1 and position on 2
+    This means that both having lots of votes and a good percentage matter.
+    The intention is that recently movies aren't penalized too much, but don't jump straight to the top either.
     :param top: number of top movies to print
     :param user: user's list to print
     :param cur: database cursor
@@ -149,9 +155,10 @@ def ranked_list(top, user, cur):
     """
     cur.execute("SELECT movie_id FROM watch_lists WHERE user = %s;", (user,))
     movies = cur.fetchall()
-    movie_wins = dict()
-    movie_losses = dict()
-    movie_rankings = dict()
+    movie_wins = dict() #movie id points to number of wins
+    movie_losses = dict() #movie id points to number of losses
+    movie_rankings = dict() #movie id points to win%
+    #count up wins and losses for each movie
     for movie in movies:
         movie_wins[movie[0]] = 0
         movie_losses[movie[0]] = 0
@@ -163,19 +170,31 @@ def ranked_list(top, user, cur):
     losers = cur.fetchall()
     for loser in losers:
         movie_losses[loser[0]] += 1
+    #calculate win% for each movie
     for movie in movies:
         try:
             movie_rankings[movie[0]] = movie_wins[movie[0]] / (movie_wins[movie[0]] + movie_losses[movie[0]])
         except ZeroDivisionError:
             movie_rankings[movie[0]] = 0
-    movie_list = sorted(movie_rankings.keys(), reverse=True, key=movie_rankings.get)
-    i = 1
+    movie_list = sorted(movie_wins.keys(), reverse=True, key=movie_wins.get) #get movies sorted by win count
+    movie_rankings_sorted = sorted(movie_rankings.keys(), reverse=True, key=movie_rankings.get) #get movies sorted by win%
+    movie_ranking_dict = dict() #movie id points to movie score
+    counter = 1
     for movie in movie_list:
+        movie_ranking_dict[movie] = counter
+        counter += 1
+    counter = 1
+    for movie in movie_rankings_sorted:
+        movie_ranking_dict[movie] += counter
+        counter += 1
+    ranked_movies = sorted(movie_ranking_dict.keys(), key=movie_ranking_dict.get) #final ranking
+    i = 1
+    for movie in ranked_movies:
         if i > top:
             break
         cur.execute("SELECT title FROM watch_lists WHERE movie_id = %s;", (movie,))
         title = cur.fetchall()[0][0]
-        print(str(i) + ". " + title)
+        print(str(i) + ". " + title + " (" + str(movie_rankings[movie]) + ", " + str(movie_wins[movie]) + ")")
         i += 1
 
 
