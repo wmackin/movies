@@ -39,24 +39,24 @@ def add(user, moviesDB, cur, cn):
     for i in range (0,3):
         try:
             movie_ids.append(movies[i].getID())
+            movie = moviesDB.get_movie(movie_ids[i])
+            titles.append(movie['title'])
+            try:
+                years.append(movie['year'])
+            except KeyError:
+                year = 0
+            try:
+                directors = movie['directors']
+            except KeyError:
+                directors = ''
+
+            print(str(i + 1) + ". ", end="")
+            print(f'{titles[i]} - {years[i]}')
+            directStr = ' '.join(map(str, directors))
+            print(f'directors: {directStr}')
         except IndexError:
             print("No movies found.")
             break
-        movie = moviesDB.get_movie(movie_ids[i])
-        titles.append(movie['title'])
-        try:
-            years.append(movie['year'])
-        except KeyError:
-            year = 0
-        try:
-            directors = movie['directors']
-        except KeyError:
-            directors = ''
-
-        print(str(i + 1) + ". ", end="")
-        print(f'{titles[i]} - {years[i]}')
-        directStr = ' '.join(map(str, directors))
-        print(f'directors: {directStr}')
     print("Type '1', '2', or '3' to confirm a search result, or anything else to cancel. ")
     confirmation = input()
     if confirmation == '1' or confirmation == '2' or confirmation == '3':
@@ -228,16 +228,19 @@ def main():
             print("'list' or 'l': Print watched list")
             print("'quit' or 'q': Quit program")
             print("'rank' or 'r': Rank movies")
+            print("'sign out' or 's': Sign out")
             print("'top' or 't': Print your top movies")
         if (command.lower() == 'l') or (command.lower() == 'list'):
             watched(user, cur)
-        if (command.lower() == 'q') or (command.lower() == 'quit'):
+        elif (command.lower() == 'q') or (command.lower() == 'quit'):
             break
-        if (command.lower() == 'r') or (command.lower() == 'rank'):
+        elif (command.lower() == 'r') or (command.lower() == 'rank'):
             rank(user, cur, cn)
-        if (command.lower() == 't') or (command.lower() == 'top'):
+        elif (command.lower() == 't') or (command.lower() == 'top'):
             top = int(input("How many movies do you want to show? "))
             ranked_list(top, user, cur)
+        elif (command.lower() == 's') or (command.lower() == 'sign out') or (command.lower() == 'signout'):
+            user = input("Enter a username: ")
 
     cur.close()
     cn.close()
