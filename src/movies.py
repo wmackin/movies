@@ -134,9 +134,11 @@ def rank(user, cur, cn):
             user_pick = int(user_pick)
     if user_pick == 1:
         cur.execute("INSERT INTO rankings VALUES (%s, %s, %s);", (user, movie1, movie2))
+        selected = title1
     else:
         cur.execute("INSERT INTO rankings VALUES (%s, %s, %s);", (user, movie2, movie1))
-    print("Choice", user_pick, "is the winner!")
+        selected = title2
+    print(selected, "is the winner!")
     cn.commit()
 
 def ranked_list(top, user, cur):
@@ -194,7 +196,7 @@ def ranked_list(top, user, cur):
             break
         cur.execute("SELECT title FROM watch_lists WHERE movie_id = %s;", (movie,))
         title = cur.fetchall()[0][0]
-        print(str(i) + ". " + title + " (" + str(movie_rankings[movie]) + ", " + str(movie_wins[movie]) + ")")
+        print(str(i) + ". " + title)
         i += 1
 
 
