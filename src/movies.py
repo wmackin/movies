@@ -49,11 +49,24 @@ def add(user, moviesDB, cur, cn):
                 directors = movie['directors']
             except KeyError:
                 directors = ''
+            cast_list = []
+            try:
+                cast = movie['cast']
+                counter = 3
+                for actor in cast:
+                    if counter == 0:
+                        break
+                    cast_list.append(actor)
+                    counter -= 1
+            except KeyError:
+                cast = ''
 
             print(str(i + 1) + ". ", end="")
             print(f'{titles[i]} - {years[i]}')
             directStr = ' '.join(map(str, directors))
-            print(f'directors: {directStr}')
+            print(f'Directors: {directStr}')
+            castStr = ' '.join(map(str, cast_list))
+            print(f'Starring: {castStr}')
         except IndexError:
             print("No movies found.")
             break
