@@ -63,9 +63,9 @@ def add(user, moviesDB, cur, cn):
 
             print(str(i + 1) + ". ", end="")
             print(f'{titles[i]} - {years[i]}')
-            directStr = ' '.join(map(str, directors))
+            directStr = ', '.join(map(str, directors))
             print(f'Directors: {directStr}')
-            castStr = ' '.join(map(str, cast_list))
+            castStr = ', '.join(map(str, cast_list))
             print(f'Starring: {castStr}')
         except IndexError:
             print("No movies found.")
